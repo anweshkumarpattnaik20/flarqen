@@ -1,87 +1,238 @@
-# FLARQEN - Disposable OS Sandbox
+# FLARQEN
 
-FLARQEN is a Windows 11 desktop app that gives you disposable virtual machines. You install an operating system once as a protected master image, then create as many throwaway sandboxes from it as you like. Reset or delete a sandbox at any time and the master stays untouched.
+### Disposable OS Sandbox Manager
 
-Status: **development release 0.2.0. Not production-ready.** See "Known limits" below.
+**Create. Isolate. Test. Destroy.**
 
-## How it works
+FLARQEN is a desktop application designed to manage disposable operating system sandboxes in an isolated environment. It provides a centralized interface for creating, managing, monitoring, and maintaining sandbox instances.
 
-- The master image is a QCOW2 file. It is read-only once registered and its SHA-256 checksum is verified.
-- Every sandbox gets its own copy-on-write overlay that points back to the master. Guests write only to their overlay.
-- Virtual machines run with QEMU and Windows Hypervisor Platform (WHPX) acceleration, with networking turned off.
-- Reset throws the overlay away. Delete removes one sandbox's folder only.
+Built with modern desktop technologies, FLARQEN aims to make isolated computing environments easier to manage while providing users with control over sandbox lifecycles, snapshots, and system resources.
 
-## Features
+---
 
-- Five sandbox templates, with optional auto-delete timers (30 minutes to 7 days)
-- Snapshots (up to 5 per sandbox), duplicate, reset, force stop
-- Resource monitor, activity log, setup check, Ctrl+K command bar
-- Light and dark themes
+## ✨ Overview
 
-## Requirements (to use the app)
+FLARQEN is designed for developers, security researchers, testers, and technical users who need temporary and isolated operating system environments.
 
-- Windows 11, 64-bit, with virtualization enabled in the BIOS/UEFI
-- Windows Hypervisor Platform turned on (then restart)
-- QEMU for Windows installed separately (FLARQEN does not bundle it)
-- About 25 GB free disk space to create a sandbox, plus a safety reserve
+Instead of configuring and managing everything manually, FLARQEN brings essential sandbox management operations into one desktop interface.
 
-## Requirements (to build the app)
+## 🚀 Features
 
-- Node.js and npm
-- Rust (stable) with the MSVC toolchain and Visual Studio Build Tools (C++ workload)
-- Microsoft Edge WebView2 runtime (included with Windows 11)
+- **Sandbox Management** – Create, manage, and organize disposable sandbox environments.
+- **Snapshot Management** – Manage sandbox snapshots and restore previous states.
+- **Lifecycle Management** – Control sandbox operations and environment lifecycles.
+- **System Monitoring** – Monitor sandbox activity and resource usage.
+- **Image Management** – Manage operating system images used by sandbox environments.
+- **Activity Logs** – Access application and sandbox-related logs.
+- **Expiry Management** – Support temporary sandbox lifetimes and expiry operations.
+- **Settings & Configuration** – Configure application preferences and sandbox settings.
+- **Desktop Experience** – Native desktop application powered by Tauri.
 
-## Build and run
+> Note: Actual feature availability depends on the configured virtualization backend and operating system.
 
-```powershell
+---
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| React.js | Frontend UI |
+| TypeScript | Type safety |
+| Vite | Frontend development and bundling |
+| Tailwind CSS | UI styling |
+| Tauri | Desktop application framework |
+| Rust | Backend functionality |
+| SQLite | Local database |
+| QEMU | Virtualization backend |
+
+---
+
+## 📁 Project Structure
+
+```text
+FLARQEN/
+│
+├── assets/
+├── public/
+│
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── App.tsx
+│   ├── App.css
+│   ├── api.ts
+│   ├── context.tsx
+│   ├── settings.ts
+│   └── types.ts
+│
+├── src-tauri/
+│   ├── migrations/
+│   ├── src/
+│   │   ├── commands.rs
+│   │   ├── database.rs
+│   │   ├── disk_manager.rs
+│   │   ├── expiry.rs
+│   │   ├── host.rs
+│   │   ├── installer.rs
+│   │   ├── lifecycle.rs
+│   │   ├── monitor.rs
+│   │   ├── qemu.rs
+│   │   ├── sandbox_manager.rs
+│   │   └── snapshots.rs
+│   │
+│   ├── Cargo.toml
+│   └── tauri.conf.json
+│
+├── package.json
+├── package-lock.json
+├── vite.config.ts
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+## 💻 Getting Started
+
+### Prerequisites
+
+Before installing FLARQEN, make sure you have the following tools installed:
+
+- Node.js (LTS recommended)
+- npm
+- Rust
+- Cargo
+- Microsoft C++ Build Tools (Windows)
+- WebView2 Runtime (Windows)
+- Tauri system dependencies
+
+If you intend to use QEMU virtualization, install and configure a compatible QEMU environment separately.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/anweshkumarpattnaik20/flarqen.git
+```
+
+### 2. Navigate to the project
+
+```bash
+cd flarqen
+```
+
+### 3. Install dependencies
+
+```bash
 npm install
-npm run tauri dev      # run in development
-npm run tauri build    # build the installers
 ```
 
-Installers are written to `src-tauri\target\release\bundle`:
+### 4. Start the development server
 
-- `msi\disposable-os-sandbox_<version>_x64_en-US.msi`
-- `nsis\disposable-os-sandbox_<version>_x64-setup.exe`
-
-The installers are unsigned, so Windows SmartScreen shows a warning. Click More info, then Run anyway.
-
-## Tests and checks
-
-```powershell
-cd src-tauri
-cargo test             # 77 backend tests
-cargo audit            # known vulnerabilities in Rust dependencies
-cd ..
-npm audit              # known vulnerabilities in npm dependencies
+```bash
+npm run tauri dev
 ```
 
-## Project layout
+This starts the frontend development environment and launches the Tauri desktop application.
 
-- `src` - React, TypeScript and Tailwind front end
-- `src-tauri/src` - Rust backend: database, sandbox lifecycle, QEMU control, timers, snapshots
-- `src-tauri/migrations` - SQLite migrations. Add new ones to the list in `database.rs`. Never edit an old migration.
-- `src-tauri/tauri.conf.json` - app name, version, window and security settings
-- `public` - logos
+---
 
-## Where your data lives
+## 🏗️ Production Build
 
-`%LOCALAPPDATA%\DisposableOSSandbox` holds `sandbox.db`, `settings.json`, `images` and `sandboxes`. Uninstalling the app leaves this folder in place. Delete it by hand to remove everything permanently.
+To create a production desktop application:
 
-## Security notes
+```bash
+npm run tauri build
+```
 
-- No guest network, shared folders, clipboard sharing or USB passthrough.
-- The shutdown channel listens on localhost only. It has no password, so other programs on the same PC can connect to it.
-- Virtualization does not guarantee isolation. This is not a replacement for a dedicated malware-analysis lab.
+The generated application bundles will be available in the Tauri build output directory, depending on your target platform and configuration.
 
-## Known limits
+---
 
-- Installers are unsigned. QEMU is not bundled.
-- Auto-delete timers only run while the app is open.
-- Duplicates do not include snapshots.
-- Not yet tested on a clean second PC, after an interrupted install, or with an .exe-over-.exe upgrade.
-- Export, import and safe file drop are not implemented.
+## 🔧 Development Commands
 
-## Licence
+| Command | Description |
+|---|---|
+| `npm install` | Install dependencies |
+| `npm run dev` | Start frontend development server |
+| `npm run build` | Build frontend |
+| `npm run tauri dev` | Run desktop application |
+| `npm run tauri build` | Build desktop application |
 
-Not yet chosen. QEMU and the other third-party components keep their own licences.
+---
+
+## 🔐 Security & Isolation
+
+FLARQEN is designed around the concept of disposable computing environments.
+
+Its architecture includes components for:
+
+- Sandbox lifecycle management.
+- Virtual machine management.
+- Disk and storage management.
+- Snapshot operations.
+- Environment expiry.
+- Database-backed configuration.
+
+**Important:** A disposable sandbox should not automatically be considered a security boundary. Actual isolation depends on the virtualization configuration, host security, permissions, and backend implementation. Do not use an unverified configuration to execute untrusted code.
+
+---
+
+## 🗺️ Roadmap
+
+The following are potential development priorities:
+
+- [ ] Improve sandbox creation workflows.
+- [ ] Expand virtualization backend support.
+- [ ] Enhance resource monitoring.
+- [ ] Improve snapshot and recovery workflows.
+- [ ] Strengthen sandbox isolation and security.
+- [ ] Improve error handling and diagnostics.
+- [ ] Add comprehensive automated testing.
+- [ ] Improve cross-platform compatibility.
+
+---
+
+## 🤝 Contributing
+
+Contributions, bug reports, and feature suggestions are welcome.
+
+To contribute:
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Implement your changes.
+4. Test your changes.
+5. Submit a Pull Request.
+
+```bash
+git checkout -b feature/your-feature-name
+git add .
+git commit -m "Add: your feature description"
+git push origin feature/your-feature-name
+```
+
+---
+
+## 📄 License
+
+Please refer to [LICENSE.txt](LICENSE.txt) for licensing information.
+
+---
+
+## 👨‍💻 Author
+
+**Anwesh Kumar Pattnaik**
+
+GitHub: [@anweshkumarpattnaik20](https://github.com/anweshkumarpattnaik20)
+
+Project: [FLARQEN](https://github.com/anweshkumarpattnaik20/flarqen)
+
+---
+
+<p align="center">
+
+**FLARQEN**
+
+*Your environment. Your control. Your isolation.*
+
+</p>
